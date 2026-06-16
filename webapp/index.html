@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Operational Dashboard</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --danger: #dc2626;
+            --danger-hover: #b91c1c;
+            --bg: #f8fafc;
+            --surface: #ffffff;
+            --text-dark: #0f172a;
+            --text-gray: #475569;
+            --text-light: #94a3b8;
+            --border: #e2e8f0;
+            --radius: 8px;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+        }
+
+        body {
+            font-family: Inter, system-ui, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-dark);
+            margin: 0;
+            padding: 40px 20px;
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 40px;
+        }
+
+        @media (max-width: 950px) {
+            .dashboard { grid-template-columns: 1fr; gap: 30px; }
+        }
+
+        header {
+            grid-column: 1 / -1;
+            margin-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        header h1 { margin: 0 0 5px 0; font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
+        header p { margin: 0; color: var(--text-gray); font-size: 0.95rem; }
+        header strong { color: var(--primary); }
+
+        .panel {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            height: fit-content;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--bg);
+        }
+
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group.full { grid-column: span 2; }
+
+        label { display: block; font-weight: 500; font-size: 0.85rem; color: var(--text-gray); margin-bottom: 6px; }
+        label span.req { color: var(--danger); margin-left: 2px; }
+        label span.opt { color: var(--text-light); font-size: 0.75rem; margin-left: 4px; }
+
+        input, select, textarea {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border);
+            border-radius: var(--radius); box-sizing: border-box; font-size: 0.9rem;
+            background: #fff; color: var(--text-dark); transition: all 0.15s ease;
+        }
+
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15); }
+        textarea { resize: vertical; }
+
+        .btn-submit {
+            background: var(--primary); color: #fff; font-weight: 600; border: none;
+            padding: 12px; border-radius: var(--radius); cursor: pointer; width: 100%;
+            font-size: 0.95rem; transition: background 0.2s;
+        }
+        .btn-submit:hover { background: var(--primary-hover); }
+
+        .feed { display: flex; flex-direction: column; gap: 15px; }
+
+        .msg-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+        .msg-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 15px; }
+        .msg-email { font-weight: 600; font-size: 1.05rem; color: var(--text-dark); display: block; }
+        .msg-meta { font-size: 0.8rem; color: var(--text-gray); display: block; margin-top: 2px; }
+        .msg-assignment { font-size: 0.82rem; color: #4338ca; display: block; margin-top: 5px; background: #e0e7ff; padding: 4px 8px; border-radius: 4px; width: fit-content; }
+        
+        .msg-body { margin: 0 0 15px 0; font-size: 0.9rem; color: var(--text-gray); line-height: 1.5; white-space: pre-wrap; }
+        .msg-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px; flex-wrap: wrap; gap: 10px; }
+        .msg-date { font-size: 0.75rem; color: var(--text-light); }
+
+        .badge { font-size: 0.7rem; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; }
+        .badge-high { background: #fee2e2; color: #b91c1c; }
+        .badge-medium { background: #fef3c7; color: #d97706; }
+        .badge-low { background: #f0fdf4; color: #16a34a; }
+
+        .status-pending { background: #e2e8f0; color: #475569; }
+        .status-in-progress { background: #dbeafe; color: #1d4ed8; }
+        .status-closed { background: #dcfce7; color: #15803d; }
+
+        .action-tray { display: flex; align-items: center; gap: 8px; }
+        .inline-form { display: inline-block; margin: 0; }
+        
+        .status-select-inline { padding: 4px 8px; font-size: 0.8rem; width: auto; background-color: #f1f5f9; border-color: var(--border); cursor: pointer; height: 28px; }
+
+        .delete-btn { background: #fff5f5; color: var(--danger); border: 1px solid #fee2e2; font-size: 0.8rem; font-weight: 500; padding: 4px 10px; border-radius: var(--radius); cursor: pointer; height: 28px; }
+        .delete-btn:hover { background: var(--danger); color: white; border-color: var(--danger); }
+        .no-records { text-align: center; color: var(--text-light); padding: 40px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <header>
+            <h1>Team Operations Assignment Hub</h1>
+            <p>Task Tracking Node Pipeline Engine &bull; Layered with <strong>PostgreSQL Isolation</strong></p>
+        </header>
+
+        <div class="panel">
+            <h2 class="panel-title">File Operations Ticket</h2>
+            <form action="/submit" method="POST">
+                <div class="form-group">
+                    <label for="title">Ticket Subject / Title<span class="req">*</span></label>
+                    <input type="text" id="title" name="title" placeholder="e.g., Cache invalidation issue" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="reporter">Reporter Name<span class="req">*</span></label>
+                        <input type="text" id="reporter" name="reporter" placeholder="Sarah (SysAdmin)" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Scope Component<span class="req">*</span></label>
+                        <select id="category" name="category" required>
+                            <option value="Infrastructure Server">Infrastructure Server</option>
+                            <option value="Database Cluster">Database Cluster</option>
+                            <option value="Nginx Routing proxy">Nginx Proxy Routing</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="department">Assign to Department<span class="req">*</span></label>
+                        <select id="department" name="department" required>
+                            <option value="">-- Choose Dept --</option>
+                            <option value="DevOps & Cloud">DevOps & Cloud</option>
+                            <option value="Database Engineering">Database Engineering</option>
+                            <option value="Cyber Security Team">Cyber Security Team</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="assignee">Assign to Person<span class="opt">(Optional)</span></label>
+                        <input type="text" id="assignee" name="assignee" placeholder="e.g., David Miller">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="priority">Severity Tier<span class="req">*</span></label>
+                    <select id="priority" name="priority" required>
+                        <option value="Low">Low Severity</option>
+                        <option value="Medium">Medium Severity</option>
+                        <option value="High">High Severity</option>
+                    </select>
+                </div>
+                <div class="form-group full">
+                    <label for="description">Issue Analysis & Error Trace<span class="req">*</span></label>
+                    <textarea id="description" name="description" rows="5" placeholder="Provide environment notes..." required></textarea>
+                </div>
+                <button type="submit" class="btn-submit">Dispatch Ticket to Queue</button>
+            </form>
+        </div>
+
+        <div>
+            <div class="panel" style="background: transparent; border: none; box-shadow: none; padding: 0;">
+                <h2 class="panel-title" style="border-bottom: 2px solid var(--border);">Active Team Backlog Queue</h2>
+                <div class="feed">
+                    __MESSAGES_PLACEHOLDER__
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
