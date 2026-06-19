@@ -22,6 +22,7 @@ services:
   # 2. Web Application Layer (Node.js Express)
   webapp:
     build: ./webapp
+    image: ahmedaelhaj/ticket-webapp:v1
     container_name: web_app
     environment:
       DB_HOST: db
@@ -37,6 +38,7 @@ services:
   # 3. Web Server Reverse Proxy (Nginx)
   nginx:
     build: ./nginx
+    image: ahmedaelhaj/ticket-nginx:v1
     container_name: nginx_proxy
     ports:
       - "80:80"
