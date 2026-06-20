@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+        - name: webapp
+          image: ahmedaelhaj/ticket-webapp:v1  # Your Docker Hub Image
+          imagePullPolicy: Always
+          env:
+            - name: DB_HOST
+              value: "db"
+            - name: DB_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: POSTGRES_USER
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: POSTGRES_DB
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: postgres-password
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webapp  # Matches the proxy target name Nginx expects
+spec:
+  ports:
+    - port: 3000
+  selector:
+    app: webapp
