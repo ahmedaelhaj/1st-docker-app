@@ -16,29 +16,52 @@ const pool = new Pool({
   port: 5432,
 });
 
-// Setup schema columns inside Postgres
-async function initDb() {
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS internal_tickets (
-        id SERIAL PRIMARY KEY,
-        title VARCHAR(150) NOT NULL,
-        reporter VARCHAR(100) NOT NULL,
-        department VARCHAR(100) NOT NULL,
-        assignee VARCHAR(100),
-        category VARCHAR(50) NOT NULL,
-        priority VARCHAR(20) NOT NULL,
-        status VARCHAR(20) DEFAULT 'Pending',
-        description TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-    console.log('PostgreSQL Table Initialized Successfully.');
-  } catch (err) {
-    console.error('Database initialization error:', err);
+// ✅ RESILIENT STARTUP LOOP: Blocks web traffic until DB is ready and seeded
+async function initializeApplication(retries = 10, delay = 3000) {
+  while (retries > 0) {
+    try {
+      console.log(`🔄 Attempting to connect to database... (${retries} attempts remaining)`);
+      
+      // Test actual network query execution
+      await pool.query('SELECT 1'); 
+      
+      // Seed missing tables automatically with zero data loss
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS internal_tickets (
+          id SERIAL PRIMARY KEY,
+          title VARCHAR(150) NOT NULL,
+          reporter VARCHAR(100) NOT NULL,
+          department VARCHAR(100) NOT NULL,
+          assignee VARCHAR(100),
+          category VARCHAR(50) NOT NULL,
+          priority VARCHAR(20) NOT NULL,
+          status VARCHAR(20) DEFAULT 'Pending',
+          description TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      
+      console.log('✅ PostgreSQL Connection Verified & Table Initialized Successfully.');
+      
+      // Start listening for traffic ONLY after DB initialization succeeds
+      app.listen(port, () => {
+        console.log(`🚀 Backend Engine actively listening on port ${port}`);
+      });
+      return; 
+
+    } catch (err) {
+      console.error(`⚠️ Database not ready yet: ${err.message}`);
+      retries -= 1;
+      if (retries === 0) {
+        console.error('❌ Could not connect to the database. Exiting application process.');
+        process.exit(1); 
+      }
+      await new Promise(res => setTimeout(res, delay));
+    }
   }
 }
-initDb();
+
+initializeApplication();
 
 async function renderPage(res) {
   try {
@@ -143,8 +166,4 @@ app.post('/delete', async (req, res) => {
     console.error(err);
     res.status(500).send('Database deletion processing error.');
   }
-});
-
-app.listen(port, () => {
-  console.log(`Backend Engine actively listening on port ${port}`);
 });

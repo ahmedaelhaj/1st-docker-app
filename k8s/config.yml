@@ -4,12 +4,12 @@ metadata:
   name: db-secret
 type: Opaque
 stringData:
-  postgres-password: "your_secure_password" # Replaces ${POSTGRES_PASSWORD}
+  postgres-password: my_secure_password 
 ---
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: app-config
 data:
-  POSTGRES_USER: "postgres_user"           # Replaces ${POSTGRES_USER}
-  POSTGRES_DB: "ticket_db"                 # Replaces ${POSTGRES_DB}
+  POSTGRES_USER: my_db_user
+  POSTGRES_DB: my_application_db

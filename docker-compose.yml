@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # 1. Database Layer (PostgreSQL)
   db:
     image: postgres:16-alpine
     container_name: postgres_db
@@ -19,7 +18,6 @@ services:
       timeout: 5s
       retries: 5
 
-  # 2. Web Application Layer (Node.js Express)
   webapp:
     build: ./webapp
     image: ahmedaelhaj/ticket-webapp:v1
@@ -35,7 +33,6 @@ services:
       db:
         condition: service_healthy
 
-  # 3. Web Server Reverse Proxy (Nginx)
   nginx:
     build: ./nginx
     image: ahmedaelhaj/ticket-nginx:v1
